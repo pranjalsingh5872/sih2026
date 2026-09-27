@@ -1546,17 +1546,40 @@
 
         L.control.zoom({ position: 'topleft' }).addTo(map);
 
-        // CartoDB Positron: Crisp, clean light theme
-        baseTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        // 100% Watermark-Free High-Contrast Basemaps
+        const humanitarianMap = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          subdomains: 'abcd',
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-        }).addTo(map);
-
-        baseTile.on('tileerror', function() {
-          console.warn('CartoDB tile error, switching to OpenStreetMap standard tiles');
-          this.setUrl('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+          subdomains: ['a', 'b', 'c'],
+          attribution: '&copy; OpenStreetMap contributors, Humanitarian OpenStreetMap Team'
         });
+
+        const esriLightCanvas = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 16,
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+        });
+
+        const esriStreetMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, USGS, NPS'
+        });
+
+        const esriTopoMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB'
+        });
+
+        // Default active basemap: Humanitarian Disaster Map (Crisp, colorful, full roads & river basins)
+        humanitarianMap.addTo(map);
+        baseTile = humanitarianMap;
+
+        // Add interactive Basemap Switcher control on top-right of the map
+        const baseMaps = {
+          "🌊 Humanitarian Disaster Map": humanitarianMap,
+          "🏛️ Tactical Light Gray": esriLightCanvas,
+          "🗺️ National Street Map": esriStreetMap,
+          "⛰️ Topographic Elevation": esriTopoMap
+        };
+        L.control.layers(baseMaps, null, { position: 'topright', collapsed: false }).addTo(map);
 
         hazardLayerGroup = L.layerGroup().addTo(map);
 
@@ -1587,7 +1610,7 @@
 
       try {
         miniMap = L.map('mini-map', { zoomControl: false }).setView([22.7196, 75.8577], 9);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 18, subdomains: ['a','b','c'] }).addTo(miniMap);
         miniPin = L.marker([22.7196, 75.8577], { draggable: true }).addTo(miniMap);
 
         miniMap.on('click', (e) => {
