@@ -174,6 +174,9 @@ def create_app() -> FastAPI:
         )
 
     dashboard_file = Path(__file__).resolve().parent / "static" / "index.html"
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.is_dir():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
     @app.get("/healthz", include_in_schema=False)
     async def root_healthz() -> dict[str, str]:
