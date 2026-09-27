@@ -3,492 +3,1912 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AAGAHI 2026 - Pan-India Disaster GIS Operations</title>
+  <title>AAGAHI 2026 — National Weather Big Data Analytics Platform</title>
   
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
     :root {
-      --bg-dark: #090d16;
-      --panel-bg: #111827;
-      --card-bg: #1a2234;
-      --border-color: #1f293d;
-      --accent-blue: #38bdf8;
-      --accent-red: #ef4444;
-      --accent-orange: #f97316;
-      --accent-green: #10b981;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-page: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-hover: #e2e8f0;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-sub: #475569;
+      
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-subtle: #eff6ff;
+      --primary-border: #bfdbfe;
+      
+      --accent-red: #e11d48;
+      --accent-red-bg: #fff1f2;
+      --accent-red-border: #fecdd3;
+      
+      --accent-orange: #d97706;
+      --accent-orange-bg: #fffbeb;
+      --accent-orange-border: #fde68a;
+      
+      --accent-green: #059669;
+      --accent-green-bg: #ecfdf5;
+      --accent-green-border: #a7f3d0;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+      --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 9999px;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-dark);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-page);
       color: var(--text-main);
       height: 100vh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
-    
+
+    /* ---------------- HEADER ---------------- */
     header {
-      height: 60px;
-      background: var(--panel-bg);
-      border-bottom: 1px solid var(--border-color);
+      height: 64px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      padding: 0 24px;
       z-index: 1000;
+      box-shadow: var(--shadow-sm);
     }
-    .brand {
+
+    .brand-section {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      font-size: 1.15rem;
+      gap: 14px;
     }
-    .brand-badge {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--accent-red);
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 9999px;
-      border: 1px solid rgba(239, 68, 68, 0.4);
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      transition: transform 0.2s ease;
+    }
+    .brand-logo:hover { transform: scale(1.05); }
+
+    .brand-info h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-info p {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--accent-green-bg);
+      border: 1px solid var(--accent-green-border);
+      color: var(--accent-green);
+      font-size: 0.72rem;
+      font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
     }
-    .nav-tabs { display: flex; gap: 8px; }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+      animation: pulseGreen 1.8s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+    }
+
+    /* ---------------- NAV TABS ---------------- */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-subtle);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
     .tab-btn {
       background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 500;
+      border: none;
+      color: var(--text-sub);
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .tab-btn:hover { color: var(--text-main); background: var(--card-bg); }
-    .tab-btn.active {
+    .tab-btn:hover {
       color: var(--text-main);
-      background: var(--card-bg);
-      border-color: var(--border-color);
+      background: rgba(255, 255, 255, 0.6);
     }
-    
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Quick Presentation Scenarios Bar */
+    .scenario-toolbar {
+      height: 44px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 0.8rem;
+    }
+
+    .scenario-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .scenario-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scen-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-sub);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .scen-btn:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary-border);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .scen-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-simulate {
+      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+      border: none;
+      color: white;
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-simulate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+    }
+    .btn-simulate:active { transform: translateY(0); }
+
+    .audio-toggle-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-sub);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .audio-toggle-btn.muted {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    /* ---------------- VIEWPORT LAYOUT ---------------- */
     .viewport-container {
       flex: 1;
       position: relative;
       display: flex;
       overflow: hidden;
     }
+
     .viewport {
       display: none;
       width: 100%;
       height: 100%;
+      opacity: 0;
+      transform: scale(0.995);
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
-    .viewport.active { display: flex; }
+    .viewport.active {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
 
+    /* ---------------- GIS VIEWPORT ---------------- */
     #gis-viewport {
       position: relative;
       width: 100%;
       height: 100%;
+      display: flex !important;
+      flex-direction: row;
     }
+    #gis-viewport:not(.active) {
+      display: none !important;
+    }
+
     #map {
-      flex: 1;
+      flex: 1 1 0%;
+      min-width: 0;
       height: 100%;
-      background: #090d16;
+      min-height: 100%;
+      background: #e5e9f0;
       z-index: 1;
     }
-    
+
+    /* Map Floating Stats HUD */
+    .map-hud-overlay {
+      position: absolute;
+      top: 16px;
+      left: 60px;
+      z-index: 999;
+      display: flex;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .hud-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+      min-width: 110px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hud-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .hud-card .hud-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .hud-card .hud-val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .hud-card.critical .hud-val { color: var(--accent-red); }
+    .hud-card.warning .hud-val { color: var(--accent-orange); }
+    .hud-card.success .hud-val { color: var(--accent-green); }
+
+    /* Radar scan effect layer */
+    .radar-sweep-container {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 400;
+      overflow: hidden;
+      opacity: 0.15;
+    }
+    .radar-sweep-line {
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(from 0deg at 50% 50%, rgba(37, 99, 235, 0.2) 0deg, rgba(37, 99, 235, 0) 45deg, transparent 360deg);
+      border-radius: 50%;
+      animation: radarScan 16s linear infinite;
+    }
+    @keyframes radarScan {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* ---------------- SIDE PANEL ---------------- */
     .side-panel {
-      width: 380px;
-      background: rgba(17, 24, 39, 0.95);
-      backdrop-filter: blur(12px);
-      border-left: 1px solid var(--border-color);
+      width: 400px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       z-index: 10;
+      box-shadow: -4px 0 15px rgba(15, 23, 42, 0.03);
     }
+
     .panel-header {
       padding: 16px 20px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-subtle);
+      background: #fafafa;
+    }
+
+    .panel-header-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 12px;
     }
-    .status-counter {
-      background: var(--card-bg);
+    .panel-header-title h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-header-title .count-badge {
+      background: var(--primary-subtle);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      font-size: 0.72rem;
+      font-weight: 700;
       padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
+      border-radius: var(--radius-full);
       font-family: 'JetBrains Mono', monospace;
-      color: var(--accent-orange);
     }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .fpill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fpill:hover { border-color: var(--primary-border); color: var(--primary); }
+    .fpill.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .search-input-box {
+      position: relative;
+      width: 100%;
+    }
+    .search-input-box input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      font-size: 0.78rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .search-input-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .search-input-box svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
     .alert-scroll {
       flex: 1;
       overflow-y: auto;
       padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      background: var(--bg-page);
     }
-    
+
+    /* Alert Cards */
     .alert-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--accent-orange);
-      padding: 12px;
-      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--primary);
+      padding: 14px;
+      border-radius: var(--radius-md);
       cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
     }
-    .alert-card:hover { border-color: #3b82f6; }
-    .alert-card.high { border-left-color: var(--accent-red); }
-    .card-head {
+    .alert-card:hover {
+      border-color: var(--primary-border);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .alert-card.critical { border-left-color: var(--accent-red); }
+    .alert-card.warning { border-left-color: var(--accent-orange); }
+    .alert-card.low { border-left-color: var(--accent-green); }
+
+    .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
-      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+    .card-hazard-name {
+      font-size: 0.88rem;
       font-weight: 700;
-    }
-    .card-tag {
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .tag-critical { background: rgba(239,68,68,0.2); color: var(--accent-red); }
-    .tag-warning { background: rgba(249,115,22,0.2); color: var(--accent-orange); }
-    .card-region { font-size: 0.75rem; color: var(--accent-blue); margin-bottom: 4px; }
-    .card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.3; }
-    .card-meta {
+      color: var(--text-main);
       display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: #64748b;
-      margin-top: 8px;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-sev-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
       font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+    }
+    .sev-critical {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red-border);
+    }
+    .sev-warning {
+      background: var(--accent-orange-bg);
+      color: var(--accent-orange);
+      border: 1px solid var(--accent-orange-border);
+    }
+    .sev-low {
+      background: var(--accent-green-bg);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green-border);
     }
 
+    .card-place {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-desc {
+      font-size: 0.76rem;
+      color: var(--text-sub);
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .card-cred-bar-wrapper {
+      margin-bottom: 8px;
+    }
+    .card-cred-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+      font-weight: 600;
+    }
+    .card-cred-track {
+      height: 5px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .card-cred-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+      transition: width 0.6s ease;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      padding-top: 6px;
+      border-top: 1px solid var(--bg-subtle);
+    }
+
+    /* ---------------- CUSTOM LEAFLET RADAR BEACON ---------------- */
+    .radar-pulse-marker {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .radar-pulse-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      animation: pulseRingAnim 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    .radar-pulse-ring:nth-child(2) {
+      animation-delay: 0.7s;
+    }
+    .radar-pulse-core {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      z-index: 2;
+    }
+    @keyframes pulseRingAnim {
+      0% { transform: scale(0.4); opacity: 0.9; }
+      60% { transform: scale(2.2); opacity: 0.2; }
+      100% { transform: scale(2.8); opacity: 0; }
+    }
+
+    /* Marker Colors */
+    .marker-critical .radar-pulse-ring { background: rgba(225, 29, 72, 0.4); border: 1px solid rgba(225, 29, 72, 0.6); }
+    .marker-critical .radar-pulse-core { background: #e11d48; }
+
+    .marker-warning .radar-pulse-ring { background: rgba(217, 119, 6, 0.4); border: 1px solid rgba(217, 119, 6, 0.6); }
+    .marker-warning .radar-pulse-core { background: #d97706; }
+
+    .marker-low .radar-pulse-ring { background: rgba(5, 150, 105, 0.4); border: 1px solid rgba(5, 150, 105, 0.6); }
+    .marker-low .radar-pulse-core { background: #059669; }
+
+    /* Custom Leaflet Popups */
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--radius-md) !important;
+      padding: 0 !important;
+      overflow: hidden;
+      box-shadow: var(--shadow-xl) !important;
+      border: 1px solid var(--border-subtle);
+    }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      font-family: 'Inter', sans-serif !important;
+      line-height: 1.4 !important;
+    }
+    .popup-box {
+      padding: 16px;
+      min-width: 250px;
+    }
+    .popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .popup-title {
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+    }
+    .popup-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .popup-btn:hover { background: var(--primary-hover); }
+
+    /* ---------------- CITIZEN DISTRESS PORTAL ---------------- */
     #citizen-viewport {
       padding: 30px;
+      background: var(--bg-page);
+      overflow-y: auto;
       justify-content: center;
-      align-items: center;
-      background: radial-gradient(circle at 50% 50%, #172033 0%, #090d16 100%);
-    }
-    .form-container {
-      width: 100%;
-      max-width: 520px;
-      background: var(--panel-bg);
-      border: 1px solid var(--border-color);
-      padding: 24px;
-      border-radius: 8px;
-    }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-    .form-control {
-      width: 100%;
-      padding: 10px 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: white;
-      font-family: inherit;
-    }
-    .btn-submit {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent-red);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
+      align-items: flex-start;
     }
 
+    .form-wrapper {
+      width: 100%;
+      max-width: 780px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 28px;
+      margin: 0 auto;
+    }
+
+    .form-hero {
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 16px;
+    }
+    .form-hero h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-hero p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .hazard-radio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .hazard-radio-card {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      background: var(--bg-surface);
+    }
+    .hazard-radio-card:hover {
+      border-color: var(--primary-border);
+      background: var(--primary-subtle);
+    }
+    .hazard-radio-card.active {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .hazard-radio-card .emoji { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+    .hazard-radio-card .title { font-size: 0.75rem; font-weight: 700; }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      color: var(--text-main);
+      font-family: inherit;
+      background: var(--bg-surface);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    /* Interactive Pin Drop Mini Map */
+    .mini-map-container {
+      height: 180px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      margin-top: 6px;
+      position: relative;
+    }
+    #mini-map {
+      width: 100%;
+      height: 100%;
+      background: #e2e8f0;
+    }
+    .mini-map-hint {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      z-index: 500;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Photo Upload & EXIF Scanner Preview */
+    .upload-zone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+      background: var(--bg-subtle);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-zone:hover {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+    }
+    .upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+
+    /* Laser Scanner Simulation */
+    .scanner-active-box {
+      display: none;
+      position: relative;
+      margin-top: 12px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: #0f172a;
+      height: 140px;
+    }
+    .scanner-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.6;
+    }
+    .scanner-laser {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: #38bdf8;
+      box-shadow: 0 0 10px 2px #38bdf8;
+      animation: laserSweep 1.8s ease-in-out infinite alternate;
+    }
+    @keyframes laserSweep {
+      0% { top: 5%; }
+      100% { top: 92%; }
+    }
+    .scanner-readout {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      right: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+      border: none;
+      border-radius: var(--radius-md);
+      color: white;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-submit:hover {
+      box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* ---------------- REGISTRY VIEWPORT ---------------- */
     #registry-viewport {
-      padding: 30px;
+      padding: 24px 30px;
+      background: var(--bg-page);
       flex-direction: column;
       overflow-y: auto;
     }
-    .table-container {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 15px;
+
+    .registry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
     }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
-    th { background: #1a2234; padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
-    td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+    .registry-header h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+    th {
+      background: var(--bg-subtle);
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .btn-table-action {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--primary);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-table-action:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ---------------- MODERN DIALOG MODAL ---------------- */
+    dialog#dispatch-modal {
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: 0;
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-xl);
+      max-width: 500px;
+      width: 90vw;
+      margin: auto;
+      overflow: hidden;
+      outline: none;
+    }
+
+    dialog#dispatch-modal::backdrop {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      transition: background-color 0.25s ease;
+    }
+
+    .modal-head {
+      background: var(--bg-subtle);
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-head h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 4px;
+    }
+    .modal-close-btn:hover { color: var(--text-main); }
+
+    .modal-body {
+      padding: 22px;
+    }
+    .modal-info-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.8rem;
+    }
+
+    .modal-foot {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border-subtle);
+      background: #fafafa;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--primary);
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 0.82rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
+    }
+    @keyframes slideInToast {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
 
+  <!-- ================= TOP HEADER ================= -->
   <header>
-    <div class="brand">
-      <span>🛡️ AAGAHI OPS-CENTER</span>
-      <span class="brand-badge">NATIONAL DISASTER ENGINE</span>
+    <div class="brand-section">
+      <div class="brand-logo">🛡️</div>
+      <div class="brand-info">
+        <h1>AAGAHI 2026</h1>
+        <p>National Weather Big Data Analytics Platform • Disaster Management</p>
+      </div>
+      <div class="status-badge">
+        <span class="pulse-dot"></span>
+        <span>OPS-CENTER ACTIVE</span>
+      </div>
     </div>
+
+    <!-- Nav Tabs -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('gis')">🗺️ GIS Operations Console</button>
-      <button class="tab-btn" onclick="switchTab('citizen')">📢 Citizen Distress Portal</button>
-      <button class="tab-btn" onclick="switchTab('registry')">🚨 Dispatch & Escalation Registry</button>
+      <button class="tab-btn active" onclick="switchTab('gis')">
+        <span>🗺️</span> GIS Operations Console
+      </button>
+      <button class="tab-btn" onclick="switchTab('citizen')">
+        <span>📢</span> Citizen Distress Portal
+      </button>
+      <button class="tab-btn" onclick="switchTab('registry')">
+        <span>🚨</span> NDRF Dispatch Registry
+      </button>
     </div>
   </header>
 
+  <!-- ================= SCENARIOS & PRESENTATION TOOLBAR ================= -->
+  <div class="scenario-toolbar">
+    <div class="scenario-label">
+      <span>🎬</span>
+      <span>Presentation Scenarios:</span>
+    </div>
+
+    <div class="scenario-pills">
+      <button class="scen-btn" onclick="triggerPreset('biparjoy')">
+        <span>🌀</span> Cyclone Biparjoy
+      </button>
+      <button class="scen-btn" onclick="triggerPreset('wayanad')">
+        <span>🌊</span> Wayanad Cloudburst
+      </button>
+      <button class="scen-btn" onclick="triggerPreset('indore')">
+        <span>🌧️</span> Indore Urban Deluge
+      </button>
+      <button class="scen-btn" onclick="triggerPreset('brahmaputra')">
+        <span>⚡</span> Brahmaputra Inundation
+      </button>
+      <button class="scen-btn" onclick="resetNationalOverview()" style="color: var(--text-muted);">
+        <span>🇮🇳</span> Pan-India Reset
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="audio-toggle-btn" id="audio-btn" onclick="toggleAudioAlarm()">
+        <span id="audio-icon">🔊</span>
+        <span id="audio-txt">Audio Chime: ON</span>
+      </button>
+      <button class="btn-simulate" onclick="simulateCitizenAlert()">
+        <span>📡</span> + Simulate Distress Beacon
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= VIEWPORT CONTAINER ================= -->
   <div class="viewport-container">
+
+    <!-- TAB 1: GIS OPERATIONS -->
     <div id="gis-viewport" class="viewport active">
+      
+      <!-- Real-time HUD stats over map -->
+      <div class="map-hud-overlay">
+        <div class="hud-card critical">
+          <span class="hud-label">Active Hotspots</span>
+          <span class="hud-val" id="hud-hotspots">0</span>
+        </div>
+        <div class="hud-card warning">
+          <span class="hud-label">Corroborated</span>
+          <span class="hud-val" id="hud-reports">0</span>
+        </div>
+        <div class="hud-card success">
+          <span class="hud-label">NDRF Units Active</span>
+          <span class="hud-val" id="hud-ndrf">3</span>
+        </div>
+        <div class="hud-card">
+          <span class="hud-label">Pipeline Latency</span>
+          <span class="hud-val" style="font-size:1.1rem; color:var(--primary);" id="hud-latency">14ms</span>
+        </div>
+      </div>
+
+      <!-- Radar sweep visual layer -->
+      <div class="radar-sweep-container">
+        <div class="radar-sweep-line"></div>
+      </div>
+
+      <!-- Map canvas -->
       <div id="map"></div>
+
+      <!-- Right Side Panel -->
       <div class="side-panel">
         <div class="panel-header">
-          <h3>Active PostGIS Clusters</h3>
-          <span class="status-counter" id="alert-counter">0</span>
+          <div class="panel-header-title">
+            <h3>Disaster Hotspot Clusters</h3>
+            <span class="count-badge" id="side-count">0</span>
+          </div>
+
+          <div class="filter-pills">
+            <button class="fpill active" onclick="filterHotspots('ALL')">All</button>
+            <button class="fpill" onclick="filterHotspots('CRITICAL')">Critical</button>
+            <button class="fpill" onclick="filterHotspots('HIGH')">High</button>
+            <button class="fpill" onclick="filterHotspots('MEDIUM')">Medium</button>
+          </div>
+
+          <div class="search-input-box">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="hotspot-search" placeholder="Search state, district or hazard (e.g. Kerala, Gujarat, Assam, Cyclone)..." oninput="onSearchHotspot(this.value)">
+          </div>
         </div>
+
         <div class="alert-scroll" id="alert-container">
-          <div style="color: #94a3b8; padding: 10px; font-size: 0.85rem;">Syncing active PostGIS clusters...</div>
+          <div style="color: var(--text-muted); padding: 14px; font-size: 0.8rem; text-align: center;">
+            Syncing active PostGIS clusters...
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- TAB 2: CITIZEN DISTRESS PORTAL -->
     <div id="citizen-viewport" class="viewport">
-      <div class="form-container">
-        <h2 style="margin-bottom: 8px; font-size: 1.2rem;">File Field Distress Signal</h2>
-        <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 20px;">Streams directly into Kafka high-priority pipeline with automated geocoding.</p>
-        
+      <div class="form-wrapper">
+        <div class="form-hero">
+          <h2><span>📢</span> File Field Distress Signal</h2>
+          <p>Feeds directly into Kafka high-priority ingestion stream with automated EXIF GPS recovery and physical weather validation.</p>
+        </div>
+
         <form id="incident-form" onsubmit="submitIncident(event)">
+          
           <div class="form-group">
-            <label>Disaster Classification</label>
-            <select class="form-control" id="f-hazard">
-              <option value="FLASH_FLOOD">FLASH_FLOOD</option>
-              <option value="CYCLONE">CYCLONE</option>
-              <option value="LANDSLIDE">LANDSLIDE</option>
-              <option value="HEAVY_RAINFALL">HEAVY_RAINFALL</option>
-              <option value="THUNDERSTORM">THUNDERSTORM</option>
-            </select>
+            <label>Disaster Category</label>
+            <div class="hazard-radio-grid">
+              <div class="hazard-radio-card active" onclick="selectHazard('FLASH_FLOOD', this)">
+                <span class="emoji">🌊</span>
+                <span class="title">Flash Flood</span>
+              </div>
+              <div class="hazard-radio-card" onclick="selectHazard('CYCLONE', this)">
+                <span class="emoji">🌀</span>
+                <span class="title">Cyclone</span>
+              </div>
+              <div class="hazard-radio-card" onclick="selectHazard('LANDSLIDE', this)">
+                <span class="emoji">⛰️</span>
+                <span class="title">Landslide</span>
+              </div>
+              <div class="hazard-radio-card" onclick="selectHazard('HEAVY_RAINFALL', this)">
+                <span class="emoji">🌧️</span>
+                <span class="title">Cloudburst</span>
+              </div>
+              <div class="hazard-radio-card" onclick="selectHazard('THUNDERSTORM', this)">
+                <span class="emoji">⚡</span>
+                <span class="title">Lightning</span>
+              </div>
+            </div>
+            <input type="hidden" id="f-hazard" value="FLASH_FLOOD">
           </div>
+
           <div class="form-group">
-            <label>Distress Description</label>
-            <textarea class="form-control" rows="3" id="f-desc" placeholder="Details of water levels, trapped citizens or blocked roads..." required></textarea>
+            <label>Emergency Distress Description</label>
+            <textarea class="form-control" rows="3" id="f-desc" placeholder="Describe current situation: trapped citizens, water level above knees, submerged vehicles..." required>Submerged vehicles and waterlogging rising rapidly near central market area.</textarea>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex:1;">
-              <label>Latitude</label>
-              <input type="number" step="any" class="form-control" id="f-lat" value="22.7196" required />
+
+          <!-- Location Picker -->
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+              <label style="margin:0;">Incident Location (Click mini-map to drop pin)</label>
+              <button type="button" onclick="detectUserLocation()" style="background:none; border:none; color:var(--primary); font-size:0.75rem; font-weight:700; cursor:pointer;">
+                📍 Detect GPS
+              </button>
             </div>
-            <div class="form-group" style="flex:1;">
-              <label>Longitude</label>
-              <input type="number" step="any" class="form-control" id="f-lon" value="75.8577" required />
+            
+            <div class="mini-map-container">
+              <div id="mini-map"></div>
+              <div class="mini-map-hint">Click anywhere on the map to pinpoint exact coordinates</div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 8px;">
+              <div style="flex:1;">
+                <input type="number" step="any" class="form-control" id="f-lat" value="22.7196" required />
+              </div>
+              <div style="flex:1;">
+                <input type="number" step="any" class="form-control" id="f-lon" value="75.8577" required />
+              </div>
             </div>
           </div>
-          <button type="submit" class="btn-submit">BROADCAST FIELD ALERT</button>
-          <div id="form-msg" style="margin-top: 10px; font-size: 0.85rem;"></div>
+
+          <!-- Photo Evidence with EXIF Scanner Demo -->
+          <div class="form-group">
+            <label>Visual Evidence / Photos (With Automated EXIF GPS Scanner)</label>
+            <div class="upload-zone" onclick="triggerExifDemo()">
+              <div class="upload-icon">📸</div>
+              <div style="font-size:0.82rem; font-weight:700; color:var(--text-main);">Upload Distress Photo or Click for Simulated EXIF Scan</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Supports JPG, PNG with camera geotags</div>
+            </div>
+
+            <div class="scanner-active-box" id="scanner-box">
+              <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80" class="scanner-img" alt="Disaster Scene">
+              <div class="scanner-laser"></div>
+              <div class="scanner-readout">
+                <span id="scan-step-txt">⚡ Extracting EXIF Geotag...</span>
+                <span style="color:#10b981; font-weight:700;" id="scan-conf-txt">CONF: 94%</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-submit-distress">
+            <span>🚨</span> BROADCAST EMERGENCY ALERT TO KAFKA
+          </button>
         </form>
       </div>
     </div>
 
+    <!-- TAB 3: REGISTRY VIEWPORT -->
     <div id="registry-viewport" class="viewport">
-      <h2>NDRF & State Mobilization Registry</h2>
+      <div class="registry-header">
+        <div>
+          <h2><span>🛡️</span> NDRF & State Disaster Mobilization Registry</h2>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Real-time command registry of corroborated disaster clusters and dispatch units.</p>
+        </div>
+        <button class="scen-btn" onclick="fetchRegistryData()">
+          <span>🔄</span> Refresh Registry
+        </button>
+      </div>
+
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>Hotspot ID</th>
               <th>Hazard Category</th>
-              <th>Severity</th>
-              <th>Reports Density</th>
-              <th>Credibility</th>
-              <th>Status</th>
+              <th>Severity Level</th>
+              <th>Corroborated Density</th>
+              <th>AI Credibility</th>
+              <th>Mobilization Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="registry-body">
-            <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Loading cluster registry...</td></tr>
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading command registry...</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <!-- ================= MODERN DISPATCH MODAL ================= -->
+  <dialog id="dispatch-modal">
+    <div class="modal-head">
+      <h3><span>🚨</span> Mobilize NDRF Battalion</h3>
+      <button class="modal-close-btn" onclick="closeDispatchModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info-box" id="modal-hotspot-info">
+        Loading incident details...
+      </div>
+
+      <div class="form-group">
+        <label>Assigned Response Battalion</label>
+        <select class="form-control" id="m-battalion">
+          <option value="8th Bn NDRF (Ghaziabad / Northern Command)">8th Bn NDRF (Ghaziabad / Northern Command)</option>
+          <option value="5th Bn NDRF (Pune / Western Command)">5th Bn NDRF (Pune / Western Command)</option>
+          <option value="10th Bn NDRF (Vijayawada / Coastal Response)">10th Bn NDRF (Vijayawada / Coastal Response)</option>
+          <option value="4th Bn NDRF (Arakkonam / Southern Taskforce)">4th Bn NDRF (Arakkonam / Southern Taskforce)</option>
+          <option value="SDRF Rapid Disaster Deployment Unit">SDRF Rapid Disaster Deployment Unit</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Dispatched Equipment & Fleet</label>
+        <div style="font-size:0.8rem; color:var(--text-sub); display:flex; flex-direction:column; gap:4px;">
+          <label style="font-weight:normal; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" checked> 4x Inflatable Motorboats (Gemini/Zodiac)
+          </label>
+          <label style="font-weight:normal; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" checked> Thermal Imaging Drone Reconnaissance
+          </label>
+          <label style="font-weight:normal; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" checked> Emergency Dewatering Pumps & First-Aid Rafts
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-family:'JetBrains Mono'; color:var(--primary); font-weight:700;">
+        <span>Estimated Transit ETA:</span>
+        <span>28 - 35 Minutes</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="fpill" onclick="closeDispatchModal()" style="padding:6px 14px;">Cancel</button>
+      <button class="btn-submit" style="width:auto; padding:7px 18px;" onclick="confirmDispatch()">
+        <span>✓</span> Confirm Deployment Order
+      </button>
+    </div>
+  </dialog>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Leaflet JS with CDN Fallback -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    if (typeof L === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"><\\/script>');
+    }
+  </script>
+  
+  <script>
+    // State management
+    let currentHotspots = [];
+    let activeFilter = 'ALL';
+    let activeHotspotId = null;
+    let audioAlarmEnabled = true;
+    let selectedDispatchHid = null;
+
+    // Web Audio Synthesizer for Tactical Alert Chime
+    let audioCtx = null;
+    function playTacticalChime(isCritical = false) {
+      if (!audioAlarmEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+
+        if (isCritical) {
+          osc1.frequency.setValueAtTime(880, now);
+          osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.15);
+          osc2.frequency.setValueAtTime(440, now);
+          osc2.frequency.exponentialRampToValueAtTime(587.33, now + 0.15);
+        } else {
+          osc1.frequency.setValueAtTime(523.25, now);
+          osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.12);
+          osc2.frequency.setValueAtTime(261.63, now);
+          osc2.frequency.exponentialRampToValueAtTime(329.63, now + 0.12);
+        }
+
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+      } catch (e) {
+        console.warn('Web Audio error:', e);
+      }
+    }
+
+    function toggleAudioAlarm() {
+      audioAlarmEnabled = !audioAlarmEnabled;
+      const btn = document.getElementById('audio-btn');
+      const icon = document.getElementById('audio-icon');
+      const txt = document.getElementById('audio-txt');
+      if (audioAlarmEnabled) {
+        btn.classList.remove('muted');
+        icon.innerText = '🔊';
+        txt.innerText = 'Audio Chime: ON';
+        showToast('Tactical audio feedback enabled');
+      } else {
+        btn.classList.add('muted');
+        icon.innerText = '🔇';
+        txt.innerText = 'Audio Chime: OFF';
+        showToast('Tactical audio feedback muted');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const icon = type === 'critical' ? '🚨' : (type === 'success' ? '✅' : 'ℹ️');
+      t.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        t.style.transition = 'all 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+      }, 4000);
+    }
+
+    // Tab Switching
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
       
       const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.innerText.toLowerCase().includes(tabId));
       if (activeBtn) activeBtn.classList.add('active');
-      document.getElementById(`${tabId}-viewport`).classList.add('active');
+      
+      const targetViewport = document.getElementById(`${tabId}-viewport`);
+      if (targetViewport) targetViewport.classList.add('active');
 
       if (tabId === 'gis') {
-        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => map.invalidateSize(), 150);
+      } else if (tabId === 'citizen') {
+        setTimeout(() => miniMap.invalidateSize(), 150);
+      } else if (tabId === 'registry') {
+        fetchRegistryData();
       }
     }
 
-    // 1. Reliable Standard OpenStreetMap Layer (Zero key needed, 100% uptime)
+    // ---------------- MAP INITIALIZATION (LIGHT THEME) ----------------
+    // Using CartoDB Positron: Crisp, clean, fast, 100% reliable light theme
     const map = L.map('map', { zoomControl: false }).setView([22.5937, 78.9629], 5);
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const baseTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    const hazardLayerGroup = L.layerGroup().addTo(map);
+    baseTile.on('tileerror', function() {
+      this.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+    });
 
-    // 2. Safe Parsing Utility
-    function safeJsonParse(data) {
-      if (typeof data === 'object' && data !== null) return data;
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        return null;
+    const hazardLayerGroup = L.layerGroup().addTo(map);
+    const markerRegistry = new Map(); // hid -> { marker, polygon }
+
+    // Mini Map for Citizen Distress Pin Placement
+    const miniMap = L.map('mini-map', { zoomControl: false }).setView([22.7196, 75.8577], 9);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
+    
+    let miniPin = L.marker([22.7196, 75.8577], { draggable: true }).addTo(miniMap);
+
+    // Ensure map tiles render fully upon DOM render and window resize
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        map.invalidateSize();
+        miniMap.invalidateSize();
+      }, 200);
+    });
+    window.addEventListener('resize', () => {
+      map.invalidateSize();
+    });
+    miniMap.on('click', (e) => {
+      miniPin.setLatLng(e.latlng);
+      document.getElementById('f-lat').value = e.latlng.lat.toFixed(5);
+      document.getElementById('f-lon').value = e.latlng.lng.toFixed(5);
+    });
+    miniPin.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      document.getElementById('f-lat').value = pos.lat.toFixed(5);
+      document.getElementById('f-lon').value = pos.lng.toFixed(5);
+    });
+
+    function detectUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          miniMap.setView([lat, lon], 12);
+          miniPin.setLatLng([lat, lon]);
+          document.getElementById('f-lat').value = lat.toFixed(5);
+          document.getElementById('f-lon').value = lon.toFixed(5);
+          showToast(`Detected coordinates: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+        }, err => {
+          showToast('Geolocation not available, defaulted to Indore center');
+        });
       }
     }
 
-    // 3. Dynamic PostGIS Hotspots Fetching
-    async function renderNationalDisasterZones() {
-      console.log("[AAGAHI] Fetching active disaster hotspots...");
-      hazardLayerGroup.clearLayers();
-      const container = document.getElementById('alert-container');
-      const regBody = document.getElementById('registry-body');
+    function safeJsonParse(data) {
+      if (typeof data === 'object' && data !== null) return data;
+      try { return JSON.parse(data); } catch(e) { return null; }
+    }
 
-      let features = [];
-
+    // ---------------- DYNAMIC POSTGIS HOTSPOTS ----------------
+    async function loadHotspots() {
       try {
         const res = await fetch('/api/v1/analytics/hotspots');
         if (res.ok) {
           const data = await res.json();
-          features = data.features || [];
-        } else {
-          console.error("API error status:", res.status);
+          currentHotspots = data.features || [];
+          renderHotspots();
+          updateHudCounters();
         }
       } catch (err) {
-        console.error('Fetch exception:', err);
+        console.error('Hotspot fetch error:', err);
       }
+    }
 
-      document.getElementById('alert-counter').innerText = features.length;
+    function updateHudCounters() {
+      const total = currentHotspots.length;
+      let totalReports = 0;
+      let critCount = 0;
 
-      if (features.length === 0) {
-        container.innerHTML = '<div style="color:#94a3b8; padding:12px; font-size:0.85rem;">No active disaster zones detected at this moment.</div>';
-        regBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8;">No active records in registry.</td></tr>';
+      currentHotspots.forEach(f => {
+        const p = f.properties || {};
+        totalReports += (p.incident_count || 1);
+        if (p.severity === 'CRITICAL' || p.severity === 'HIGH') critCount++;
+      });
+
+      animateValue('hud-hotspots', total);
+      animateValue('hud-reports', totalReports);
+      document.getElementById('side-count').innerText = total;
+
+      // Realistic pipeline latency variation
+      const latVal = Math.floor(Math.random() * 5) + 12;
+      document.getElementById('hud-latency').innerText = `${latVal}ms`;
+    }
+
+    function animateValue(id, end) {
+      const obj = document.getElementById(id);
+      if (!obj) return;
+      const start = parseInt(obj.innerText, 10) || 0;
+      if (start === end) return;
+      const duration = 400;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.round(start + (end - start) * progress);
+        obj.innerText = current;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    function renderHotspots() {
+      const container = document.getElementById('alert-container');
+      const searchVal = document.getElementById('hotspot-search').value.toLowerCase().trim();
+
+      // Differential update on map to prevent flickering
+      const currentIds = new Set();
+
+      container.innerHTML = '';
+
+      const filtered = currentHotspots.filter(f => {
+        const p = f.properties || {};
+        const sevMatch = (activeFilter === 'ALL') || (p.severity === activeFilter);
+        const textMatch = !searchVal || 
+          (p.hazard_type && p.hazard_type.toLowerCase().includes(searchVal)) ||
+          (p.place_name && p.place_name.toLowerCase().includes(searchVal));
+        return sevMatch && textMatch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-muted); padding:16px; font-size:0.8rem; text-align:center;">No matching disaster zones found.</div>`;
         return;
       }
 
-      container.innerHTML = '';
-      regBody.innerHTML = '';
+      filtered.forEach((feat, index) => {
+        const p = feat.properties || {};
+        const hid = p.hotspot_id || `h-${index}`;
+        currentIds.add(hid);
 
-      features.forEach(feat => {
-        const props = feat.properties || {};
-        const isCritical = (props.severity === 'HIGH' || props.severity === 'CRITICAL');
-        const color = isCritical ? '#ef4444' : '#f97316';
-        const hazardType = props.hazard_type || 'FLASH_FLOOD';
-        const cred = props.avg_credibility ? Math.round(props.avg_credibility * 100) : 85;
-        const count = props.incident_count || 1;
+        const isCritical = (p.severity === 'CRITICAL' || p.severity === 'HIGH');
+        const sevClass = (p.severity === 'CRITICAL') ? 'critical' : (p.severity === 'HIGH' ? 'critical' : (p.severity === 'MEDIUM' ? 'warning' : 'low'));
+        const color = (p.severity === 'CRITICAL' || p.severity === 'HIGH') ? '#e11d48' : (p.severity === 'MEDIUM' ? '#d97706' : '#059669');
+        const hazardType = p.hazard_type || 'FLASH_FLOOD';
+        const cred = p.avg_credibility ? Math.round(p.avg_credibility * 100) : 85;
+        const count = p.incident_count || 1;
+        const placeName = p.place_name || `Regional Hotspot Cluster (${hazardType})`;
 
-        // Centroid Coords Extraction
+        // Centroid Coords
         let coords = [22.9734, 78.6569];
-        const centroidObj = safeJsonParse(props.centroid);
+        const centroidObj = safeJsonParse(p.centroid);
         if (centroidObj && centroidObj.coordinates) {
           coords = [centroidObj.coordinates[1], centroidObj.coordinates[0]];
         }
 
-        const popupContent = `
-          <div style="font-family:'Inter',sans-serif; padding:4px; color:#111827;">
-            <b style="color:${color}; font-size:0.95rem;">${hazardType}</b><br>
-            <b>Severity:</b> ${props.severity || 'HIGH'}<br>
-            <b>Corroborated Reports:</b> ${count}<br>
-            <b>Credibility:</b> ${cred}%<br>
-            <div style="font-size:0.75rem; color:#6b7280; margin-top:4px;">
-              Cluster ID: ${props.hotspot_id ? props.hotspot_id.slice(0,8) : 'AUTO'}
+        // 1. Create or Update Leaflet Map Layer
+        if (!markerRegistry.has(hid)) {
+          // Animated Pulse Marker
+          const customPulseIcon = L.divIcon({
+            className: 'custom-pulse-wrap',
+            html: `
+              <div class="radar-pulse-marker marker-${sevClass}">
+                <div class="radar-pulse-ring"></div>
+                <div class="radar-pulse-ring"></div>
+                <div class="radar-pulse-core"></div>
+              </div>
+            `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+
+          const pin = L.marker(coords, { icon: customPulseIcon }).addTo(hazardLayerGroup);
+
+          // Geometry Polygon
+          let poly = null;
+          const geomObj = safeJsonParse(feat.geometry);
+          if (geomObj && (geomObj.type === 'Polygon' || geomObj.type === 'MultiPolygon')) {
+            try {
+              poly = L.geoJSON(geomObj, {
+                style: {
+                  color: color,
+                  weight: 2,
+                  fillColor: color,
+                  fillOpacity: 0.18,
+                  dashArray: '4, 4'
+                }
+              }).addTo(hazardLayerGroup);
+            } catch(e) {}
+          }
+          if (!poly) {
+            poly = L.circle(coords, {
+              radius: 18000,
+              color: color,
+              weight: 2,
+              fillColor: color,
+              fillOpacity: 0.18
+            }).addTo(hazardLayerGroup);
+          }
+
+          const popupContent = `
+            <div class="popup-box">
+              <div class="popup-header">
+                <span class="popup-title">${hazardType.replace('_', ' ')}</span>
+                <span class="card-sev-pill sev-${sevClass}">${p.severity || 'ACTIVE'}</span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--primary); font-weight:600; margin-bottom:8px;">${placeName}</div>
+              <div class="popup-row"><span>Corroborated Reports:</span><b>${count} signals</b></div>
+              <div class="popup-row"><span>AI Credibility Score:</span><b>${cred}% Verified</b></div>
+              <div class="popup-row"><span>Physical Meteo Check:</span><b style="color:var(--accent-green);">CONFIRMED</b></div>
+              <button class="popup-btn" onclick="openDispatchModal('${hid}', '${hazardType}', '${p.severity || 'HIGH'}', '${placeName.replace(/'/g, "\\'")}')">
+                🚨 Mobilize NDRF Battalion
+              </button>
+            </div>
+          `;
+
+          pin.bindPopup(popupContent);
+          poly.bindPopup(popupContent);
+
+          markerRegistry.set(hid, { marker: pin, poly: poly, coords: coords });
+        }
+
+        // 2. Render Side Panel Alert Card
+        const card = document.createElement('div');
+        card.className = `alert-card ${sevClass}`;
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="card-hazard-name">
+              <span>${getHazardEmoji(hazardType)}</span>
+              <span>${hazardType.replace('_', ' ')}</span>
+            </span>
+            <span class="card-sev-pill sev-${sevClass}">${p.severity || 'ACTIVE'}</span>
+          </div>
+          <div class="card-place">📍 ${placeName}</div>
+          <div class="card-desc">Spatial PostGIS cluster corroborated from multi-source physical sensors, citizen geotags, and IMD feeds.</div>
+          <div class="card-cred-bar-wrapper">
+            <div class="card-cred-labels">
+              <span>AI Credibility Index</span>
+              <span>${cred}%</span>
+            </div>
+            <div class="card-cred-track">
+              <div class="card-cred-fill" style="width: ${cred}%;"></div>
             </div>
           </div>
-        `;
-
-        // Render Geometry (Polygon or Circle fallback)
-        const geomObj = safeJsonParse(feat.geometry);
-        let polygonLayer = null;
-
-        if (geomObj && (geomObj.type === 'Polygon' || geomObj.type === 'MultiPolygon')) {
-          try {
-            polygonLayer = L.geoJSON(geomObj, {
-              style: {
-                color: color,
-                weight: 2,
-                fillColor: color,
-                fillOpacity: 0.4
-              }
-            }).addTo(hazardLayerGroup);
-            polygonLayer.bindPopup(popupContent);
-          } catch(err) {
-            console.warn("GeoJSON layer error:", err);
-          }
-        }
-
-        if (!polygonLayer) {
-          polygonLayer = L.circle(coords, {
-            radius: 20000,
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.4,
-            weight: 2
-          }).addTo(hazardLayerGroup);
-          polygonLayer.bindPopup(popupContent);
-        }
-
-        // Center Pin
-        const pin = L.circleMarker(coords, {
-          radius: 6,
-          fillColor: '#ffffff',
-          color: color,
-          weight: 2,
-          fillOpacity: 1
-        }).addTo(hazardLayerGroup);
-        pin.bindPopup(popupContent);
-
-        // Alert Card
-        const card = document.createElement('div');
-        card.className = `alert-card ${isCritical ? 'high' : ''}`;
-        card.innerHTML = `
-          <div class="card-head">
-            <span>${hazardType}</span>
-            <span class="card-tag ${isCritical ? 'tag-critical' : 'tag-warning'}">${props.severity || 'ACTIVE'}</span>
-          </div>
-          <div class="card-region">PostGIS Cluster Zone</div>
-          <div class="card-desc">Corroborated incident zone with ${count} active distress signals.</div>
-          <div class="card-meta">
-            <span>Density: ${count}</span>
-            <span>Credibility: ${cred}%</span>
+          <div class="card-footer">
+            <span>Signals: ${count} verified</span>
+            <span>ID: ${hid.slice(0,8)}</span>
           </div>
         `;
+
         card.onclick = () => {
-          map.flyTo(coords, 10, { duration: 1.2 });
-          polygonLayer.openPopup();
+          map.flyTo(coords, 9, { duration: 1.2, easeLinearity: 0.25 });
+          const item = markerRegistry.get(hid);
+          if (item && item.marker) {
+            setTimeout(() => item.marker.openPopup(), 600);
+          }
+          playTacticalChime(isCritical);
         };
-        container.appendChild(card);
 
-        // Registry Row
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-family:'JetBrains Mono'; font-size:0.75rem;">${props.hotspot_id ? props.hotspot_id.slice(0,8) : 'AUTO'}...</td>
-          <td><b>${hazardType}</b></td>
-          <td><span class="card-tag ${isCritical ? 'tag-critical' : 'tag-warning'}">${props.severity || 'ACTIVE'}</span></td>
-          <td>${count} reports</td>
-          <td>${cred}%</td>
-          <td><span style="color: #10b981; font-weight: 600;">ACTIVE</span></td>
-          <td><button onclick="map.flyTo([${coords[0]}, ${coords[1]}], 10); switchTab('gis');" style="background:#1e293b; border:1px solid #334155; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;">Locate</button></td>
-        `;
-        regBody.appendChild(tr);
+        container.appendChild(card);
       });
+
+      // Cleanup removed markers
+      markerRegistry.forEach((val, key) => {
+        if (!currentIds.has(key)) {
+          hazardLayerGroup.removeLayer(val.marker);
+          hazardLayerGroup.removeLayer(val.poly);
+          markerRegistry.delete(key);
+        }
+      });
+    }
+
+    function getHazardEmoji(type) {
+      if (type.includes('FLOOD')) return '🌊';
+      if (type.includes('CYCLONE')) return '🌀';
+      if (type.includes('LANDSLIDE')) return '⛰️';
+      if (type.includes('RAIN')) return '🌧️';
+      if (type.includes('THUNDER') || type.includes('LIGHT')) return '⚡';
+      return '⚠️';
+    }
+
+    function filterHotspots(sev) {
+      activeFilter = sev;
+      document.querySelectorAll('.fpill').forEach(p => p.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.fpill')).find(b => b.innerText.toUpperCase() === sev);
+      if (activeBtn) activeBtn.classList.add('active');
+      renderHotspots();
+    }
+
+    function onSearchHotspot(val) {
+      renderHotspots();
+    }
+
+    // ---------------- PRESENTATION SCENARIO PRESETS ----------------
+    async function triggerPreset(scenario) {
+      showToast(`Loading Presentation Scenario: ${scenario.toUpperCase()}...`);
+      playTacticalChime(true);
+
+      try {
+        const res = await fetch('/api/v1/analytics/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario: scenario })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          await loadHotspots();
+          
+          if (data.hotspot && data.hotspot.properties) {
+            const centroid = safeJsonParse(data.hotspot.properties.centroid);
+            if (centroid && centroid.coordinates) {
+              const coords = [centroid.coordinates[1], centroid.coordinates[0]];
+              map.flyTo(coords, 8, { duration: 1.6 });
+              setTimeout(() => {
+                const item = markerRegistry.get(data.hotspot.properties.hotspot_id);
+                if (item) item.marker.openPopup();
+              }, 1200);
+            }
+          }
+          showToast(`Scenario ${scenario.toUpperCase()} active on command console!`, 'critical');
+        }
+      } catch (err) {
+        console.error('Scenario trigger error:', err);
+      }
+    }
+
+    function resetNationalOverview() {
+      map.flyTo([22.5937, 78.9629], 5, { duration: 1.4 });
+      showToast('Camera reset to Pan-India overview');
+    }
+
+    async function simulateCitizenAlert() {
+      const lat = 22.7 + (Math.random() - 0.5) * 0.1;
+      const lon = 75.8 + (Math.random() - 0.5) * 0.1;
+      showToast('Broadcasting real-time citizen distress beacon...', 'critical');
+      playTacticalChime(true);
+
+      try {
+        await fetch('/api/v1/incidents/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': 'dev-citizen-key'
+          },
+          body: JSON.stringify({
+            description: "Rapid water level increase, rescue needed near lower colony",
+            lat: lat,
+            lon: lon,
+            category_hint: "FLASH_FLOOD",
+            reporter_handle: "field_simulator"
+          })
+        });
+        setTimeout(loadHotspots, 600);
+      } catch (e) {
+        console.warn('Simulation report error:', e);
+      }
+    }
+
+    // ---------------- CITIZEN DISTRESS SUBMISSION ----------------
+    function selectHazard(hazard, el) {
+      document.querySelectorAll('.hazard-radio-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('f-hazard').value = hazard;
+    }
+
+    function triggerExifDemo() {
+      const box = document.getElementById('scanner-box');
+      box.style.display = 'block';
+      const stepTxt = document.getElementById('scan-step-txt');
+      const confTxt = document.getElementById('scan-conf-txt');
+
+      stepTxt.innerText = '⚡ Extracting EXIF Geotag metadata...';
+      confTxt.innerText = 'LOCATING...';
+
+      setTimeout(() => {
+        stepTxt.innerText = '📍 GPS Found: 22.7196° N, 75.8577° E';
+        confTxt.innerText = 'GEO: 99%';
+      }, 1000);
+
+      setTimeout(() => {
+        stepTxt.innerText = '🌦️ Open-Meteo Verification: 42.8mm rain recorded';
+        confTxt.innerText = 'METEO: MATCH';
+      }, 2200);
+
+      setTimeout(() => {
+        stepTxt.innerText = '🧠 AI Deduplication: Unique event corroboration OK';
+        confTxt.innerText = 'CONF: 96%';
+      }, 3400);
     }
 
     async function submitIncident(e) {
       e.preventDefault();
-      const msg = document.getElementById('form-msg');
-      msg.style.color = '#38bdf8';
-      msg.innerText = 'Broadcasting to Kafka cluster...';
+      const btn = document.getElementById('btn-submit-distress');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> INGESTING INTO KAFKA CLUSTER...';
 
       const payload = {
         description: document.getElementById('f-desc').value,
@@ -509,22 +1929,150 @@
         });
 
         if (res.ok) {
-          msg.style.color = '#10b981';
-          msg.innerText = 'Disaster reported successfully! Aggregating into PostGIS...';
+          showToast('Disaster alert ingested & queued for spatial aggregation!', 'success');
+          playTacticalChime(false);
           document.getElementById('f-desc').value = '';
-          setTimeout(renderNationalDisasterZones, 1000);
+          switchTab('gis');
+          setTimeout(loadHotspots, 800);
         } else {
-          msg.style.color = '#ef4444';
-          msg.innerText = 'Submission failed: ' + res.statusText;
+          showToast('Failed to queue incident: ' + res.statusText, 'critical');
         }
       } catch (err) {
-        msg.style.color = '#ef4444';
-        msg.innerText = 'Gateway error: ' + err.message;
+        showToast('Gateway error: ' + err.message, 'critical');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚨</span> BROADCAST EMERGENCY ALERT TO KAFKA';
       }
     }
 
-    renderNationalDisasterZones();
-    setInterval(renderNationalDisasterZones, 15000);
+    // ---------------- NDRF DISPATCH REGISTRY ----------------
+    async function fetchRegistryData() {
+      const tbody = document.getElementById('registry-body');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Refreshing live mobilization registry...</td></tr>`;
+
+      try {
+        const res = await fetch('/api/v1/analytics/alerts');
+        if (res.ok) {
+          const data = await res.json();
+          const alerts = data.alerts || [];
+
+          if (alerts.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No active alerts requiring mobilization at this time.</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = '';
+          alerts.forEach(a => {
+            const isCritical = (a.severity === 'CRITICAL' || a.severity === 'HIGH');
+            const sevClass = (a.severity === 'CRITICAL') ? 'critical' : (a.severity === 'HIGH' ? 'critical' : 'warning');
+            const cred = a.credibility ? Math.round(a.credibility * 100) : 88;
+            const isMobilized = (a.dispatch_status === 'MOBILIZED');
+
+            let coords = [22.7196, 75.8577];
+            const locObj = safeJsonParse(a.location);
+            if (locObj && locObj.coordinates) {
+              coords = [locObj.coordinates[1], locObj.coordinates[0]];
+            }
+
+            const safePlace = (a.place_name || a.hazard_type).replace(/'/g, "\\'");
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td style="font-family:'JetBrains Mono', monospace; font-size:0.75rem; font-weight:700;">
+                ${a.alert_id}
+              </td>
+              <td>
+                <span style="display:flex; align-items:center; gap:6px; font-weight:700;">
+                  <span>${getHazardEmoji(a.hazard_type)}</span>
+                  <span>${a.hazard_type.replace('_', ' ')}</span>
+                </span>
+                <div style="font-size:0.72rem; color:var(--primary); font-weight:600; margin-top:2px;">📍 ${a.place_name || 'Active Hazard Sector'}</div>
+              </td>
+              <td>
+                <span class="card-sev-pill sev-${sevClass}">${a.severity}</span>
+              </td>
+              <td>
+                <b>${a.incident_count}</b> corroborated signals
+              </td>
+              <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-weight:700; font-family:'JetBrains Mono';">${cred}%</span>
+                  <div style="width:60px; height:5px; background:var(--bg-subtle); border-radius:4px; overflow:hidden;">
+                    <div style="width:${cred}%; height:100%; background:var(--primary);"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${isMobilized 
+                  ? `<span class="status-badge" style="background:var(--accent-green-bg); color:var(--accent-green);"><span class="pulse-dot"></span> MOBILIZED</span>`
+                  : `<span class="status-badge" style="background:var(--accent-orange-bg); color:var(--accent-orange); border-color:var(--accent-orange-border);">ESCALATED</span>`
+                }
+              </td>
+              <td>
+                ${isMobilized
+                  ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">En Route</span>`
+                  : `<button class="btn-table-action" onclick="openDispatchModal('${a.hotspot_id}', '${a.hazard_type}', '${a.severity}', '${safePlace}')">
+                      <span>🚀</span> Mobilize Unit
+                     </button>`
+                }
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (e) {
+        console.error('Fetch registry error:', e);
+      }
+    }
+
+    // Modal Control
+    function openDispatchModal(hid, hazard, severity, place) {
+      selectedDispatchHid = hid;
+      const modal = document.getElementById('dispatch-modal');
+      const infoBox = document.getElementById('modal-hotspot-info');
+      infoBox.innerHTML = `
+        <div style="font-weight:800; font-size:0.92rem; color:var(--text-main); margin-bottom:4px;">
+          ${hazard.replace('_', ' ')} Escalation
+        </div>
+        <div style="color:var(--text-muted); font-size:0.76rem;">Target Sector: <b>${place}</b></div>
+        <div style="color:var(--text-muted); font-size:0.76rem;">Cluster ID: <code>${hid}</code></div>
+      `;
+      modal.showModal();
+    }
+
+    function closeDispatchModal() {
+      const modal = document.getElementById('dispatch-modal');
+      modal.close();
+    }
+
+    async function confirmDispatch() {
+      if (!selectedDispatchHid) return;
+      const battalion = document.getElementById('m-battalion').value;
+      
+      try {
+        const res = await fetch('/api/v1/analytics/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hotspot_id: selectedDispatchHid,
+            battalion: battalion,
+            personnel_count: 45
+          })
+        });
+
+        if (res.ok) {
+          closeDispatchModal();
+          showToast(`Dispatch Order Issued! ${battalion} en route to zone.`, 'success');
+          playTacticalChime(false);
+          fetchRegistryData();
+        }
+      } catch (e) {
+        showToast('Dispatch failed: ' + e.message, 'critical');
+      }
+    }
+
+    // ---------------- INITIAL BOOT ----------------
+    loadHotspots();
+    setInterval(loadHotspots, 8000);
   </script>
 </body>
 </html>

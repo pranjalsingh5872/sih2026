@@ -32,12 +32,12 @@ WITH clustered AS (
         credibility_score,
         geom::geometry AS geom_g,
         observed_at,
-        ST_ClusterDBSCAN(geom::geometry, eps := 0.20, minpoints := 2) OVER(
+        ST_ClusterDBSCAN(geom::geometry, eps := 0.75, minpoints := 1) OVER(
             PARTITION BY COALESCE(ai_category, 'GENERAL_WEATHER')
         ) AS cluster_id
     FROM weather.incidents
     WHERE geom IS NOT NULL
-      AND observed_at >= NOW() - INTERVAL '24 hours'
+      AND observed_at >= NOW() - INTERVAL '7 days'
 )
 SELECT 
     hazard_type,
@@ -45,7 +45,12 @@ SELECT
     COUNT(*) AS incident_count,
     ROUND(AVG(credibility_score)::numeric, 3) AS avg_credibility,
     ST_Centroid(ST_Collect(geom_g)) AS centroid,
-    ST_ConvexHull(ST_Collect(geom_g)) AS convex_hull,
+    CASE 
+        WHEN COUNT(*) >= 3 AND ST_GeometryType(ST_ConvexHull(ST_Collect(geom_g))) = 'ST_Polygon'
+            THEN ST_ConvexHull(ST_Collect(geom_g))
+        ELSE 
+            ST_Buffer(ST_Centroid(ST_Collect(geom_g))::geography, 18000)::geometry
+    END AS convex_hull,
     MIN(observed_at) AS first_reported,
     MAX(observed_at) AS last_reported
 FROM clustered
@@ -74,13 +79,23 @@ async def recalculate_hotspots(pool):
             await conn.execute("UPDATE weather.disaster_hotspots SET status = 'INACTIVE' WHERE status = 'ACTIVE';")
 
             for c in clusters:
-                sev = "HIGH" if c["incident_count"] >= 5 else ("MEDIUM" if c["incident_count"] >= 3 else "LOW")
+                cnt = c["incident_count"]
+                htype = c["hazard_type"]
+                if htype in ("CYCLONE", "LANDSLIDE") or cnt >= 15:
+                    sev = "CRITICAL"
+                elif cnt >= 6 or htype in ("FLASH_FLOOD", "HEAVY_RAINFALL"):
+                    sev = "HIGH"
+                elif cnt >= 3:
+                    sev = "MEDIUM"
+                else:
+                    sev = "LOW"
+
                 await conn.execute("""
                     INSERT INTO weather.disaster_hotspots (
                         hazard_type, severity, incident_count, avg_credibility,
                         centroid, convex_hull, first_reported_at, last_reported_at, status
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVE');
-                """, c["hazard_type"], sev, c["incident_count"], float(c["avg_credibility"]),
+                """, htype, sev, cnt, float(c["avg_credibility"]),
                      c["centroid"], c["convex_hull"], c["first_reported"], c["last_reported"])
             logger.info(f"Generated {len(clusters)} active disaster hotspots via PostGIS ST_ClusterDBSCAN.")
         except Exception as err:

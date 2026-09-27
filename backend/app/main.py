@@ -175,9 +175,19 @@ def create_app() -> FastAPI:
 
     dashboard_file = Path(__file__).resolve().parent / "static" / "index.html"
 
+    @app.get("/healthz", include_in_schema=False)
+    async def root_healthz() -> dict[str, str]:
+        return {"status": "alive"}
+
+    @app.get("/readyz", include_in_schema=False)
+    async def root_readyz() -> dict[str, str]:
+        return {"status": "ready"}
+
     @app.get("/", include_in_schema=False)
-    async def root() -> Response:
-        if dashboard_file.is_file():
+    async def root(request: Request) -> Response:
+        accept = request.headers.get("accept", "")
+        # Browsers send 'text/html,...'
+        if "text/html" in accept and dashboard_file.is_file():
             return FileResponse(str(dashboard_file))
         return JSONResponse({
             "service": settings.app_name,
