@@ -1,0 +1,249 @@
+name: sih26069
+
+# ---------------------------------------------------------------------------
+# Shared environment block. Every Python service (API + workers) inherits this
+# so there is exactly one place to change broker/DB wiring.
+# ---------------------------------------------------------------------------
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-local}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_JSON: ${LOG_JSON:-true}
+
+  KAFKA_ENABLED: "true"
+  KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  KAFKA_CLIENT_ID_PREFIX: sih26069
+
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB:-weatherdb}
+  POSTGRES_USER: ${POSTGRES_USER:-weather}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-weather_dev_pw}
+
+  REDIS_URL: redis://redis:6379/0
+
+  INGEST_API_KEYS: ${INGEST_API_KEYS:-dev-citizen-key,dev-partner-key}
+  ADMIN_API_KEYS: ${ADMIN_API_KEYS:-dev-admin-key}
+
+  MEDIA_ROOT: /data/media
+
+  IMD_MOCK_MODE: ${IMD_MOCK_MODE:-true}
+  IMD_BASE_URL: ${IMD_BASE_URL:-https://mausam.imd.gov.in}
+  OPENWEATHER_MOCK_MODE: ${OPENWEATHER_MOCK_MODE:-true}
+  OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+
+  GEOCODER_REMOTE_ENABLED: ${GEOCODER_REMOTE_ENABLED:-false}
+  NOMINATIM_BASE_URL: ${NOMINATIM_BASE_URL:-https://nominatim.openstreetmap.org}
+
+x-backend-common: &backend-common
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  image: sih26069/backend:dev
+  env_file:
+    - path: .env
+      required: false
+  environment: *backend-env
+  volumes:
+    - ./backend/app:/srv/app:ro
+    - media-data:/data/media
+  depends_on:
+    kafka:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  # -------------------------------------------------------------------------
+  # Kafka in KRaft mode (no ZooKeeper). Single broker is sufficient for the
+  # prototype; replication factors are pinned to 1 accordingly.
+  # -------------------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: sih-kafka
+    ports:
+      - "${KAFKA_HOST_PORT:-9092}:9092"
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT:-9092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_RETENTION_HOURS: 72
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  # One-shot job: declare topics explicitly instead of relying on auto-create,
+  # so partition counts and retention are deterministic.
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: sih-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./infra/kafka/create-topics.sh:/create-topics.sh:ro
+    entrypoint: ["bash", "/create-topics.sh"]
+    environment:
+      BOOTSTRAP: kafka:29092
+    restart: "no"
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: sih-postgres
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-weatherdb}
+      POSTGRES_USER: ${POSTGRES_USER:-weather}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-weather_dev_pw}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-weather} -d${POSTGRES_DB:-weatherdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sih-redis
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Analytical store. Not wired into Phase 1 code paths yet — started only with
+  # `--profile analytics` so the default `up` stays light.
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: sih-clickhouse
+    profiles: ["analytics"]
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    environment:
+      CLICKHOUSE_DB: weather_analytics
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-analytics}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-analytics_dev_pw}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Application services
+  # -------------------------------------------------------------------------
+  api:
+    <<: *backend-common
+    container_name: sih-api
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=3).status==200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 25s
+
+  # Fan-in worker: raw-weather-stream -> normalized-incident-stream
+  worker-normalizer:
+    <<: *backend-common
+    container_name: sih-worker-normalizer
+    command: ["python", "-m", "app.workers.normalizer"]
+    deploy:
+      replicas: ${NORMALIZER_REPLICAS:-1}
+
+  # Phase 2: AI Scoring & Event Classification Worker
+  worker-ai:
+    <<: *backend-common
+    container_name: sih-worker-ai
+    command: ["python", "-m", "app.workers.ai_scoring_worker"]
+    depends_on:
+      - kafka
+      - worker-normalizer
+  # Phase 3: Spatial Aggregation & Clustering Worker
+  
+  worker-cluster:
+    <<: *backend-common
+    container_name: sih-worker-cluster
+    command: ["python", "-m", "app.workers.cluster_worker"]
+    depends_on:
+      - kafka
+      - postgres
+      - worker-ai
+
+  worker-imd:
+    <<: *backend-common
+    container_name: sih-worker-imd
+    command: ["python", "-m", "app.workers.imd_poller"]
+
+  worker-openweather:
+    <<: *backend-common
+    container_name: sih-worker-openweather
+    command: ["python", "-m", "app.workers.openweather_poller"]
+
+  worker-social:
+    <<: *backend-common
+    container_name: sih-worker-social
+    command: ["python", "-m", "app.workers.social_simulator"]
+    environment:
+      <<: *backend-env
+      SOCIAL_SIM_RATE_PER_MIN: ${SOCIAL_SIM_RATE_PER_MIN:-90}
+      SOCIAL_SIM_DUPLICATE_RATIO: ${SOCIAL_SIM_DUPLICATE_RATIO:-0.22}
+      SOCIAL_SIM_MISSING_GEO_RATIO: ${SOCIAL_SIM_MISSING_GEO_RATIO:-0.35}
+      SOCIAL_SIM_FAKE_RATIO: ${SOCIAL_SIM_FAKE_RATIO:-0.12}
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: sih-kafka-ui
+    profiles: ["dev"]
+    ports:
+      - "${KAFKA_UI_PORT:-8080}:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: sih26069
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  kafka-data:
+  pg-data:
+  redis-data:
+  clickhouse-data:
+  media-data:

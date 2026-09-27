@@ -1,0 +1,27 @@
+# ---- Phase 1: ingestion & normalization runtime -------------------------
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-multipart==0.0.20          # multipart/form-data for citizen photo upload
+
+aiokafka==0.12.0                  # async Kafka producer/consumer
+httpx==0.28.1                     # async HTTP for IMD / OpenWeather / Nominatim
+redis[hiredis]==5.2.1             # rate limiting + ingest idempotency keys
+orjson==3.10.13                   # fast JSON (de)serialization on the hot path
+tenacity==9.0.0                   # retry policies for flaky upstream providers
+Pillow==11.1.0                    # EXIF GPS extraction from citizen photos
+
+# ---- reserved for later phases (installed now to pin the image) ---------
+asyncpg==0.30.0                   # Phase 3 PostGIS sink
+SQLAlchemy[asyncio]==2.0.36
+geoalchemy2==0.17.0
+
+# ---- dev / test ---------------------------------------------------------
+pytest==8.3.4
+pytest-asyncio==0.25.2
+# Phase 2: AI & Vector Modeling
+scikit-learn>=1.5.0
+numpy>=1.26.0
+sentence-transformers>=3.0.0
+torch>=2.2.0 --extra-index-url https://download.pytorch.org/whl/cpu

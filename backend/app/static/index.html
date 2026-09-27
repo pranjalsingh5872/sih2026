@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAGAHI 2026 - Pan-India Disaster GIS Operations</title>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #111827;
+      --card-bg: #1a2234;
+      --border-color: #1f293d;
+      --accent-blue: #38bdf8;
+      --accent-red: #ef4444;
+      --accent-orange: #f97316;
+      --accent-green: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    header {
+      height: 60px;
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.15rem;
+    }
+    .brand-badge {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-tabs { display: flex; gap: 8px; }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .tab-btn:hover { color: var(--text-main); background: var(--card-bg); }
+    .tab-btn.active {
+      color: var(--text-main);
+      background: var(--card-bg);
+      border-color: var(--border-color);
+    }
+    
+    .viewport-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      overflow: hidden;
+    }
+    .viewport {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+    .viewport.active { display: flex; }
+
+    #gis-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #090d16;
+      z-index: 1;
+    }
+    
+    .side-panel {
+      width: 380px;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .status-counter {
+      background: var(--card-bg);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-orange);
+    }
+    .alert-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .alert-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--accent-orange);
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .alert-card:hover { border-color: #3b82f6; }
+    .alert-card.high { border-left-color: var(--accent-red); }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .card-tag {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tag-critical { background: rgba(239,68,68,0.2); color: var(--accent-red); }
+    .tag-warning { background: rgba(249,115,22,0.2); color: var(--accent-orange); }
+    .card-region { font-size: 0.75rem; color: var(--accent-blue); margin-bottom: 4px; }
+    .card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.3; }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #citizen-viewport {
+      padding: 30px;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 50% 50%, #172033 0%, #090d16 100%);
+    }
+    .form-container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      border-radius: 8px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: white;
+      font-family: inherit;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent-red);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #registry-viewport {
+      padding: 30px;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .table-container {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th { background: #1a2234; padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🛡️ AAGAHI OPS-CENTER</span>
+      <span class="brand-badge">NATIONAL DISASTER ENGINE</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('gis')">🗺️ GIS Operations Console</button>
+      <button class="tab-btn" onclick="switchTab('citizen')">📢 Citizen Distress Portal</button>
+      <button class="tab-btn" onclick="switchTab('registry')">🚨 Dispatch & Escalation Registry</button>
+    </div>
+  </header>
+
+  <div class="viewport-container">
+    <div id="gis-viewport" class="viewport active">
+      <div id="map"></div>
+      <div class="side-panel">
+        <div class="panel-header">
+          <h3>Active PostGIS Clusters</h3>
+          <span class="status-counter" id="alert-counter">0</span>
+        </div>
+        <div class="alert-scroll" id="alert-container">
+          <div style="color: #94a3b8; padding: 10px; font-size: 0.85rem;">Syncing active PostGIS clusters...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="citizen-viewport" class="viewport">
+      <div class="form-container">
+        <h2 style="margin-bottom: 8px; font-size: 1.2rem;">File Field Distress Signal</h2>
+        <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 20px;">Streams directly into Kafka high-priority pipeline with automated geocoding.</p>
+        
+        <form id="incident-form" onsubmit="submitIncident(event)">
+          <div class="form-group">
+            <label>Disaster Classification</label>
+            <select class="form-control" id="f-hazard">
+              <option value="FLASH_FLOOD">FLASH_FLOOD</option>
+              <option value="CYCLONE">CYCLONE</option>
+              <option value="LANDSLIDE">LANDSLIDE</option>
+              <option value="HEAVY_RAINFALL">HEAVY_RAINFALL</option>
+              <option value="THUNDERSTORM">THUNDERSTORM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Distress Description</label>
+            <textarea class="form-control" rows="3" id="f-desc" placeholder="Details of water levels, trapped citizens or blocked roads..." required></textarea>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex:1;">
+              <label>Latitude</label>
+              <input type="number" step="any" class="form-control" id="f-lat" value="22.7196" required />
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>Longitude</label>
+              <input type="number" step="any" class="form-control" id="f-lon" value="75.8577" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">BROADCAST FIELD ALERT</button>
+          <div id="form-msg" style="margin-top: 10px; font-size: 0.85rem;"></div>
+        </form>
+      </div>
+    </div>
+
+    <div id="registry-viewport" class="viewport">
+      <h2>NDRF & State Mobilization Registry</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Hotspot ID</th>
+              <th>Hazard Category</th>
+              <th>Severity</th>
+              <th>Reports Density</th>
+              <th>Credibility</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="registry-body">
+            <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Loading cluster registry...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+      
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.innerText.toLowerCase().includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+      document.getElementById(`${tabId}-viewport`).classList.add('active');
+
+      if (tabId === 'gis') {
+        setTimeout(() => map.invalidateSize(), 200);
+      }
+    }
+
+    // 1. Reliable Standard OpenStreetMap Layer (Zero key needed, 100% uptime)
+    const map = L.map('map', { zoomControl: false }).setView([22.5937, 78.9629], 5);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const hazardLayerGroup = L.layerGroup().addTo(map);
+
+    // 2. Safe Parsing Utility
+    function safeJsonParse(data) {
+      if (typeof data === 'object' && data !== null) return data;
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 3. Dynamic PostGIS Hotspots Fetching
+    async function renderNationalDisasterZones() {
+      console.log("[AAGAHI] Fetching active disaster hotspots...");
+      hazardLayerGroup.clearLayers();
+      const container = document.getElementById('alert-container');
+      const regBody = document.getElementById('registry-body');
+
+      let features = [];
+
+      try {
+        const res = await fetch('/api/v1/analytics/hotspots');
+        if (res.ok) {
+          const data = await res.json();
+          features = data.features || [];
+        } else {
+          console.error("API error status:", res.status);
+        }
+      } catch (err) {
+        console.error('Fetch exception:', err);
+      }
+
+      document.getElementById('alert-counter').innerText = features.length;
+
+      if (features.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8; padding:12px; font-size:0.85rem;">No active disaster zones detected at this moment.</div>';
+        regBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8;">No active records in registry.</td></tr>';
+        return;
+      }
+
+      container.innerHTML = '';
+      regBody.innerHTML = '';
+
+      features.forEach(feat => {
+        const props = feat.properties || {};
+        const isCritical = (props.severity === 'HIGH' || props.severity === 'CRITICAL');
+        const color = isCritical ? '#ef4444' : '#f97316';
+        const hazardType = props.hazard_type || 'FLASH_FLOOD';
+        const cred = props.avg_credibility ? Math.round(props.avg_credibility * 100) : 85;
+        const count = props.incident_count || 1;
+
+        // Centroid Coords Extraction
+        let coords = [22.9734, 78.6569];
+        const centroidObj = safeJsonParse(props.centroid);
+        if (centroidObj && centroidObj.coordinates) {
+          coords = [centroidObj.coordinates[1], centroidObj.coordinates[0]];
+        }
+
+        const popupContent = `
+          <div style="font-family:'Inter',sans-serif; padding:4px; color:#111827;">
+            <b style="color:${color}; font-size:0.95rem;">${hazardType}</b><br>
+            <b>Severity:</b> ${props.severity || 'HIGH'}<br>
+            <b>Corroborated Reports:</b> ${count}<br>
+            <b>Credibility:</b> ${cred}%<br>
+            <div style="font-size:0.75rem; color:#6b7280; margin-top:4px;">
+              Cluster ID: ${props.hotspot_id ? props.hotspot_id.slice(0,8) : 'AUTO'}
+            </div>
+          </div>
+        `;
+
+        // Render Geometry (Polygon or Circle fallback)
+        const geomObj = safeJsonParse(feat.geometry);
+        let polygonLayer = null;
+
+        if (geomObj && (geomObj.type === 'Polygon' || geomObj.type === 'MultiPolygon')) {
+          try {
+            polygonLayer = L.geoJSON(geomObj, {
+              style: {
+                color: color,
+                weight: 2,
+                fillColor: color,
+                fillOpacity: 0.4
+              }
+            }).addTo(hazardLayerGroup);
+            polygonLayer.bindPopup(popupContent);
+          } catch(err) {
+            console.warn("GeoJSON layer error:", err);
+          }
+        }
+
+        if (!polygonLayer) {
+          polygonLayer = L.circle(coords, {
+            radius: 20000,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.4,
+            weight: 2
+          }).addTo(hazardLayerGroup);
+          polygonLayer.bindPopup(popupContent);
+        }
+
+        // Center Pin
+        const pin = L.circleMarker(coords, {
+          radius: 6,
+          fillColor: '#ffffff',
+          color: color,
+          weight: 2,
+          fillOpacity: 1
+        }).addTo(hazardLayerGroup);
+        pin.bindPopup(popupContent);
+
+        // Alert Card
+        const card = document.createElement('div');
+        card.className = `alert-card ${isCritical ? 'high' : ''}`;
+        card.innerHTML = `
+          <div class="card-head">
+            <span>${hazardType}</span>
+            <span class="card-tag ${isCritical ? 'tag-critical' : 'tag-warning'}">${props.severity || 'ACTIVE'}</span>
+          </div>
+          <div class="card-region">PostGIS Cluster Zone</div>
+          <div class="card-desc">Corroborated incident zone with ${count} active distress signals.</div>
+          <div class="card-meta">
+            <span>Density: ${count}</span>
+            <span>Credibility: ${cred}%</span>
+          </div>
+        `;
+        card.onclick = () => {
+          map.flyTo(coords, 10, { duration: 1.2 });
+          polygonLayer.openPopup();
+        };
+        container.appendChild(card);
+
+        // Registry Row
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-family:'JetBrains Mono'; font-size:0.75rem;">${props.hotspot_id ? props.hotspot_id.slice(0,8) : 'AUTO'}...</td>
+          <td><b>${hazardType}</b></td>
+          <td><span class="card-tag ${isCritical ? 'tag-critical' : 'tag-warning'}">${props.severity || 'ACTIVE'}</span></td>
+          <td>${count} reports</td>
+          <td>${cred}%</td>
+          <td><span style="color: #10b981; font-weight: 600;">ACTIVE</span></td>
+          <td><button onclick="map.flyTo([${coords[0]}, ${coords[1]}], 10); switchTab('gis');" style="background:#1e293b; border:1px solid #334155; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;">Locate</button></td>
+        `;
+        regBody.appendChild(tr);
+      });
+    }
+
+    async function submitIncident(e) {
+      e.preventDefault();
+      const msg = document.getElementById('form-msg');
+      msg.style.color = '#38bdf8';
+      msg.innerText = 'Broadcasting to Kafka cluster...';
+
+      const payload = {
+        description: document.getElementById('f-desc').value,
+        lat: parseFloat(document.getElementById('f-lat').value),
+        lon: parseFloat(document.getElementById('f-lon').value),
+        category_hint: document.getElementById('f-hazard').value,
+        reporter_handle: "citizen_portal"
+      };
+
+      try {
+        const res = await fetch('/api/v1/incidents/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': 'dev-citizen-key'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          msg.style.color = '#10b981';
+          msg.innerText = 'Disaster reported successfully! Aggregating into PostGIS...';
+          document.getElementById('f-desc').value = '';
+          setTimeout(renderNationalDisasterZones, 1000);
+        } else {
+          msg.style.color = '#ef4444';
+          msg.innerText = 'Submission failed: ' + res.statusText;
+        }
+      } catch (err) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Gateway error: ' + err.message;
+      }
+    }
+
+    renderNationalDisasterZones();
+    setInterval(renderNationalDisasterZones, 15000);
+  </script>
+</body>
+</html>
